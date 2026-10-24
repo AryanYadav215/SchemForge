@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} - SchemaForge{% endblock %}
+{% block body %}
+<header class="top">
+  <a class="brand" href="/"><span class="dot"></span>SchemaForge</a>
+  <span class="crumb">/</span><strong>{{ project.name }}</strong>
+  {% if not is_owner %}<span class="badge gray">shared with you</span>{% endif %}
+  <span class="spacer"></span>
+  <a class="btn ghost" href="{{ url_for('dashboard') }}">All databases</a>
+  <span class="muted">{{ user.username }}</span>
+  <form method="post" action="{{ url_for('logout') }}">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <button type="submit" class="ghost">Sign out</button>
+  </form>
+</header>
+<div class="ws">
+  <aside class="side" id="side" aria-label="Tables"></aside>
+  <main class="main">
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+    <section id="panel" aria-live="polite"></section>
+  </main>
+</div>
+<dialog id="dlg"><div id="dlg-inner"></div></dialog>
+<script>
+  window.PROJECT = {
+    id: {{ project.project_id }}, 
+    owner: {{ 'true' if is_owner else 'false' }}, 
+    name: {{ project.name|tojson|safe }}
+  };
+</script>
+<script src="{{ url_for('static', filename='core.js') }}"></script>
+<script src="{{ url_for('static', filename='workspace.js') }}"></script>
+<script src="{{ url_for('static', filename='tabs2.js') }}"></script>
+{% endblock %}
