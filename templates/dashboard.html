@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Your databases - SchemaForge{% endblock %}
+{% block body %}
+<header class="top">
+  <a class="brand" href="/"><span class="dot"></span>SchemaForge</a>
+  <span class="spacer"></span>
+  <span class="muted">{{ user.username }}</span>
+  <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf_token() }}"><button class="ghost">Sign out</button></form>
+</header>
+<main class="wrap">
+  <div class="row between" style="margin-bottom:16px">
+    <div><h1>Your databases</h1><div class="muted">Each one is a separate real database you design yourself.</div></div>
+    <button class="primary" id="new-db">New database</button>
+  </div>
+  <div id="mine" class="grid cols-3"></div>
+  <div id="shared-wrap" class="hidden" style="margin-top:30px">
+    <h2>Shared with you</h2>
+    <div id="shared" class="grid cols-3"></div>
+  </div>
+</main>
+<dialog id="dlg">
+  <form method="dialog" id="dlg-form">
+    <div class="dhead"><h2>New database</h2><button type="button" class="ghost" data-close aria-label="Close">&times;</button></div>
+    <div class="dbody">
+      <label class="field"><span>Name</span><input id="db-name" maxlength="60" placeholder="e.g. Library, Clinic, Inventory" required></label>
+      <label class="field"><span>Description (optional)</span><input id="db-desc" maxlength="300"></label>
+      <div id="db-err" class="msg err hidden"></div>
+    </div>
+    <div class="dfoot"><button type="button" data-close>Cancel</button><button class="primary" value="ok">Create</button></div>
+  </form>
+</dialog>
+<script src="{{ url_for('static', filename='core.js') }}"></script>
+<script>
+(async function () {
+  const dlg = document.getElementById('dlg');
+  document.getElementById('new-db').onclick = () => { dlg.showModal(); document.getElementById('db-name').focus(); };
+  dlg.querySelectorAll('[data-close]').forEach(b => b.onclick = () => dlg.close());
+  document.getElementById('dlg-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('db-err'); err.classList.add('hidden');
+    try {
+      const r = await api('POST', '/api/projects', {name: document.getElementById('db-name').value, description: document.getElementById('db-desc').value});
+      location.href = '/p/' + r.project_id;
+    } catch (ex) { err.textContent = ex.message; err.classList.remove('hidden'); }
+  };
+  function card(p, shared) {
+    const c = el('div', {class: 'card project-card', tabindex: 0, role: 'link', onclick: () => location.href = '/p/' + p.project_id,
+      onkeydown: (e) => { if (e.key === 'Enter') location.href = '/p/' + p.project_id; }},
+      el('h3', {}, p.name),
+      el('div', {class: 'muted small'}, p.description || 'No description'),
+      el('div', {style: 'margin-top:10px'}, shared ? el('span', {class: 'badge gray'}, 'by ' + p.owner) : el('span', {class: 'badge'}, (p.tables || 0) + ' tables')));
+    if (!shared) {
+      const del = el('button', {class: 'ghost danger small', style: 'float:right', title: 'Delete database', onclick: async (e) => {
+        e.stopPropagation();
+        if (!confirm('Delete "' + p.name + '" and all its data? This cannot be undone.')) return;
+        await api('DELETE', '/api/projects/' + p.project_id); load();
+      }}, 'Delete');
+      c.insertBefore(del, c.firstChild);
+    }
+    return c;
+  }
+  async function load() {
+    const d = await api('GET', '/api/projects');
+    const mine = document.getElementById('mine'); mine.replaceChildren();
+    if (!d.mine.length) mine.append(el('div', {class: 'card empty', style: 'grid-column:1/-1'}, 'No databases yet. Click "New database" to start designing one.'));
+    d.mine.forEach(p => mine.append(card(p, false)));
+    document.getElementById('shared-wrap').classList.toggle('hidden', !d.shared.length);
+    const sh = document.getElementById('shared'); sh.replaceChildren();
+    d.shared.forEach(p => sh.append(card(p, true)));
+  }
+  load();
+})();
+</script>
+{% endblock %}
