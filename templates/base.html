@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf" content="{{ csrf_token() }}">
+<link rel="icon" href="data:,">
+<link rel="icon" href="data:,">
+<title>{% block title %}SchemaForge{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% block body %}{% endblock %}
+<div id="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>
