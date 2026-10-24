@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ "Create account" if mode == "register" else "Sign in" }} - SchemaForge{% endblock %}
+{% block body %}
+<main class="hero">
+  <a class="brand" href="/"><span class="dot"></span>SchemaForge</a>
+  <h1 style="margin-top:28px">Build your own database.<br>No SQL needed.</h1>
+  <p>Design tables, link them with relationships, enter data, ask questions and share access. Under the hood it is a real relational database.</p>
+  <ul class="steps">
+    <li><b>1</b> Draw tables and constraints</li>
+    <li><b>2</b> Link them (1:1, 1:N, M:N) and see the ER diagram</li>
+    <li><b>3</b> Query with joins, grouping and subqueries</li>
+  </ul>
+  <form method="post" class="card">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <h2>{{ "Create an account" if mode == "register" else "Sign in" }}</h2>
+    {% if error %}<div class="msg err" role="alert">{{ error }}</div>{% endif %}
+    <label class="field"><span>Username</span><input name="username" autocomplete="username" required autofocus></label>
+    <label class="field"><span>Password</span><input name="password" type="password" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" required></label>
+    <div class="row between">
+      <button class="primary" type="submit">{{ "Create account" if mode == "register" else "Sign in" }}</button>
+      {% if mode == "register" %}<a href="{{ url_for('login') }}">I have an account</a>
+      {% else %}<a href="{{ url_for('register') }}">Create an account</a>{% endif %}
+    </div>
+  </form>
+</main>
+{% endblock %}
